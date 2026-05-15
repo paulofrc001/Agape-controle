@@ -115,7 +115,7 @@ export default function Login({ onLogin }: LoginProps) {
         </div>
 
         <p className="text-center text-[10px] text-[var(--text-dim)] uppercase tracking-[0.3em] mt-8">
-          Sinceridade • Verdade • União
+          Lealdade • Igualdade • Fraternidade
         </p>
       </motion.div>
     </div>
