@@ -58,22 +58,47 @@ export function generateAgapePDF(eventData: AgapeEvent, participants: Participan
   });
 
   // Individual Ranking
-  doc.text('Ranking de Consumo Individual', 14, (doc as any).lastAutoTable.finalY + 15);
+  doc.text('Detalhamento de Consumo por Participante', 14, (doc as any).lastAutoTable.finalY + 15);
+  
   const ranking = [...participants]
-    .map(p => ({
-      name: p.name,
-      type: p.type,
-      total: p.consumption.reduce((sum, c) => sum + c.quantity, 0)
-    }))
+    .map(p => {
+      const pConsumption: Record<string, number> = {};
+      DRINKS.forEach(d => {
+        const item = p.consumption.find(c => c.type === d);
+        pConsumption[d] = item ? item.quantity : 0;
+      });
+      
+      return {
+        name: p.name,
+        type: p.type,
+        ...pConsumption,
+        total: p.consumption.reduce((sum, c) => sum + c.quantity, 0)
+      };
+    })
     .filter(p => p.total > 0)
     .sort((a, b) => b.total - a.total);
 
+  const head = [['Pos', 'Participante', 'Vínculo', ...DRINKS, 'Total']];
+  const body = ranking.map((p, i) => [
+    i + 1, 
+    p.name, 
+    p.type, 
+    ...DRINKS.map(d => (p as any)[d]), 
+    p.total
+  ]);
+
   autoTable(doc, {
     startY: (doc as any).lastAutoTable.finalY + 20,
-    head: [['Pos', 'Participante', 'Vínculo', 'Total']],
-    body: ranking.map((p, i) => [i + 1, p.name, p.type, p.total]),
+    head: head,
+    body: body,
     theme: 'grid',
-    headStyles: { fillColor: [197, 160, 89] }
+    headStyles: { fillColor: [197, 160, 89], fontSize: 8 },
+    bodyStyles: { fontSize: 8 },
+    columnStyles: {
+      0: { cellWidth: 10 },
+      1: { cellWidth: 'auto' },
+      2: { cellWidth: 20 },
+    }
   });
 
   return doc;

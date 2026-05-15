@@ -130,7 +130,14 @@ export default function Reports() {
                 </div>
                 <div className="flex-1">
                   <p className="font-serif italic text-white/90">{p.name}</p>
-                  <p className="text-[9px] text-white/20 uppercase tracking-widest font-medium">{p.type}</p>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {p.consumption.filter(c => c.quantity > 0).map(c => (
+                      <span key={c.type} className="text-[8px] px-1.5 py-0.5 bg-white/5 border border-white/10 rounded text-white/40 uppercase tracking-tighter">
+                        {c.quantity}x {c.type}
+                      </span>
+                    ))}
+                    {p.consumption.length === 0 && <p className="text-[9px] text-white/20 uppercase tracking-widest font-medium">{p.type}</p>}
+                  </div>
                 </div>
                 <div className="text-right">
                   <p className="text-xl font-serif text-primary">{p.totalDrinks}</p>
