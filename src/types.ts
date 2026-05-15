@@ -27,4 +27,5 @@ export interface AgapeEvent {
   storeName: string;
   logoUrl?: string;
   adminEmail?: string;
+  adminPassword?: string;
 }

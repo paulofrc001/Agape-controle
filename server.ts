@@ -6,7 +6,7 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-async function startServer() {
+export async function createServer() {
   const app = express();
   const PORT = 3000;
 
@@ -15,10 +15,6 @@ async function startServer() {
   // API Routes
   app.post("/api/send-report", async (req, res) => {
     const { to, subject, html, attachments } = req.body;
-
-    console.log("Attempting to send email to:", to);
-    console.log("SMTP USER:", process.env.SMTP_USER);
-    console.log("SMTP HOST:", process.env.SMTP_HOST);
 
     if (!to) {
       return res.status(400).json({ error: "Recipient email is required" });
@@ -34,7 +30,7 @@ async function startServer() {
         pass: (process.env.SMTP_PASS || "").replace(/\s/g, ""), // Remove spaces
       },
       tls: {
-        rejectUnauthorized: false // Helps in some restricted environments
+        rejectUnauthorized: false
       }
     });
 
@@ -62,6 +58,7 @@ async function startServer() {
     });
     app.use(vite.middlewares);
   } else {
+    // In production (Vercel/Cloud Run), express.static serves the dist folder
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
     app.get('*', (req, res) => {
@@ -69,9 +66,13 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-  });
+  return { app, PORT };
 }
 
-startServer();
+if (process.env.NODE_ENV !== "production" || !process.env.VERCEL) {
+  createServer().then(({ app, PORT }) => {
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
+  });
+}

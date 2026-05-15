@@ -22,7 +22,8 @@ export default function Login({ onLogin }: LoginProps) {
     e.preventDefault();
     
     // Admin check
-    if (username === 'admin' && password === 'agape777') {
+    const adminPass = event?.adminPassword || 'agape777';
+    if (username === 'admin' && password === adminPass) {
       onLogin('admin');
       return;
     }

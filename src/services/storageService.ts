@@ -1,111 +1,171 @@
 import { Participant, AgapeEvent, DrinkConsumption } from '../types';
-
-const STORAGE_KEYS = {
-  PARTICIPANTS: 'agape_participants',
-  EVENT: 'agape_event',
-};
+import { supabase } from '../lib/supabase';
 
 class StorageService {
-  private getParticipants(): Participant[] {
-    const data = localStorage.getItem(STORAGE_KEYS.PARTICIPANTS);
-    return data ? JSON.parse(data) : [];
-  }
-
-  private saveParticipants(participants: Participant[]) {
-    localStorage.setItem(STORAGE_KEYS.PARTICIPANTS, JSON.stringify(participants));
-  }
-
   async getAllParticipants(): Promise<Participant[]> {
-    return this.getParticipants();
+    const { data, error } = await supabase
+      .from('participants')
+      .select('*')
+      .order('name');
+    
+    if (error) throw error;
+    
+    // Map snake_case to camelCase
+    return (data || []).map(p => ({
+      id: p.id,
+      name: p.name,
+      type: p.type,
+      symbolicName: p.symbolic_name,
+      phone: p.phone,
+      password: p.password,
+      isPresent: p.is_present,
+      checkInTime: p.check_in_time,
+      consumption: p.consumption || [],
+      createdAt: p.created_at
+    }));
   }
 
   async addParticipant(participant: Omit<Participant, 'id' | 'createdAt' | 'consumption' | 'isPresent'>): Promise<Participant> {
-    const participants = this.getParticipants();
-    const newParticipant: Participant = {
+    const { data, error } = await supabase
+      .from('participants')
+      .insert([{
+        name: participant.name,
+        type: participant.type,
+        symbolic_name: participant.symbolicName,
+        phone: participant.phone,
+        password: participant.password,
+        is_present: false,
+        consumption: []
+      }])
+      .select()
+      .single();
+
+    if (error) throw error;
+    
+    return {
       ...participant,
-      id: crypto.randomUUID(),
-      createdAt: new Date().toISOString(),
-      isPresent: false,
-      consumption: [],
+      id: data.id,
+      createdAt: data.created_at,
+      isPresent: data.is_present,
+      consumption: data.consumption
     };
-    participants.push(newParticipant);
-    this.saveParticipants(participants);
-    return newParticipant;
   }
 
   async finalizeSession(): Promise<void> {
-    const participants = this.getParticipants();
+    const participants = await this.getAllParticipants();
     const event = await this.getEvent();
     
-    // Save to history
-    const historyData = localStorage.getItem('agape_history');
-    let history = [];
-    try {
-      history = historyData ? JSON.parse(historyData) : [];
-      if (!Array.isArray(history)) history = [];
-    } catch (e) {
-      history = [];
+    // 1. Save to history
+    const { error: historyError } = await supabase
+      .from('agape_history')
+      .insert([{
+        event_data: event,
+        participants_data: participants.filter(p => p.isPresent || p.consumption.length > 0).map(p => ({
+          name: p.name,
+          type: p.type,
+          consumption: p.consumption
+        })),
+        finalized_at: new Date().toISOString()
+      }]);
+
+    if (historyError) throw historyError;
+
+    // 2. Clear current session fields in all participants
+    const { error: clearError } = await supabase
+      .from('participants')
+      .update({
+        is_present: false,
+        check_in_time: null,
+        consumption: []
+      })
+      .neq('id', 'placeholder-to-match-all'); // This trick updates all if the filter matches
+
+    // If update fails on mass, we can do it with a range or specific logic if needed
+    // In Supabase, update without filter fails unless allowed. Let's use a better way:
+    // We'll update where id is in the list of existing IDs
+    const ids = participants.map(p => p.id);
+    if (ids.length > 0) {
+      const { error: massError } = await supabase
+        .from('participants')
+        .update({ is_present: false, check_in_time: null, consumption: [] })
+        .in('id', ids);
+      if (massError) throw massError;
     }
     
-    history.push({
-      event,
-      participants: participants.filter(p => p.isPresent || p.consumption.length > 0).map(p => ({
-        name: p.name,
-        type: p.type,
-        consumption: p.consumption
-      })),
-      finalizedAt: new Date().toISOString()
-    });
-    
-    localStorage.setItem('agape_history', JSON.stringify(history));
-
-    // Reset current session fields
-    const finalized = participants.map(p => ({
-      ...p,
-      isPresent: false,
-      checkInTime: undefined,
-      consumption: []
-    }));
-    
-    this.saveParticipants(finalized);
-    
-    // Reset event details for next time (keep store name)
-    this.updateEvent({
+    // 3. Reset event details
+    await this.updateEvent({
       name: 'Novo Ágape',
       date: new Date().toISOString(),
     });
   }
 
   async authenticateBrother(symbolicName: string, password?: string): Promise<Participant | null> {
-    const participants = this.getParticipants();
-    const brother = participants.find(p => 
-      p.type === 'Irmão' && 
-      p.symbolicName?.toLowerCase() === symbolicName.toLowerCase()
-    );
+    const { data, error } = await supabase
+      .from('participants')
+      .select('*')
+      .eq('type', 'Irmão')
+      .ilike('symbolic_name', symbolicName)
+      .single();
 
-    if (!brother) return null;
+    if (error || !data) return null;
     
-    // If brother has no password yet, we might want to set one or just allow if empty
-    // For now, simple check
-    if (brother.password && brother.password !== password) return null;
+    if (data.password && data.password !== password) return null;
     
-    return brother;
+    return {
+      id: data.id,
+      name: data.name,
+      type: data.type,
+      symbolicName: data.symbolic_name,
+      phone: data.phone,
+      password: data.password,
+      isPresent: data.is_present,
+      checkInTime: data.check_in_time,
+      consumption: data.consumption || [],
+      createdAt: data.created_at
+    };
   }
 
   async updateParticipant(id: string, updates: Partial<Participant>): Promise<Participant> {
-    const participants = this.getParticipants();
-    const index = participants.findIndex(p => p.id === id);
-    if (index === -1) throw new Error('Participante não encontrado');
+    const dbUpdates: any = {};
+    if (updates.name !== undefined) dbUpdates.name = updates.name;
+    if (updates.type !== undefined) dbUpdates.type = updates.type;
+    if (updates.symbolicName !== undefined) dbUpdates.symbolic_name = updates.symbolicName;
+    if (updates.phone !== undefined) dbUpdates.phone = updates.phone;
+    if (updates.password !== undefined) dbUpdates.password = updates.password;
+    if (updates.isPresent !== undefined) dbUpdates.is_present = updates.isPresent;
+    if (updates.checkInTime !== undefined) dbUpdates.check_in_time = updates.checkInTime;
+    if (updates.consumption !== undefined) dbUpdates.consumption = updates.consumption;
+
+    const { data, error } = await supabase
+      .from('participants')
+      .update(dbUpdates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
     
-    participants[index] = { ...participants[index], ...updates };
-    this.saveParticipants(participants);
-    return participants[index];
+    return {
+      ...updates,
+      id: data.id,
+      name: data.name,
+      type: data.type,
+      symbolicName: data.symbolic_name,
+      phone: data.phone,
+      password: data.password,
+      isPresent: data.is_present,
+      checkInTime: data.check_in_time,
+      consumption: data.consumption || [],
+      createdAt: data.created_at
+    } as Participant;
   }
 
   async deleteParticipant(id: string): Promise<void> {
-    const participants = this.getParticipants();
-    const filtered = participants.filter(p => p.id !== id);
-    this.saveParticipants(filtered);
+    const { error } = await supabase
+      .from('participants')
+      .delete()
+      .eq('id', id);
+    if (error) throw error;
   }
 
   async setPresence(id: string, isPresent: boolean): Promise<Participant> {
@@ -116,69 +176,114 @@ class StorageService {
   }
 
   async toggleAttendance(id: string): Promise<Participant> {
-    const participants = this.getParticipants();
-    const participant = participants.find(p => p.id === id);
-    if (!participant) throw new Error('Participante não encontrado');
+    const { data: current, error: getError } = await supabase
+      .from('participants')
+      .select('is_present')
+      .eq('id', id)
+      .single();
     
-    return this.setPresence(id, !participant.isPresent);
+    if (getError) throw getError;
+    
+    return this.setPresence(id, !current.is_present);
   }
 
   async addConsumption(id: string, drinkType: DrinkConsumption['type']): Promise<Participant> {
-    const participants = this.getParticipants();
-    const index = participants.findIndex(p => p.id === id);
-    if (index === -1) throw new Error('Participante não encontrado');
-    
-    const participant = participants[index];
-    if (!participant.isPresent) throw new Error('Somente participantes presentes podem consumir');
+    const { data: p, error: getError } = await supabase
+      .from('participants')
+      .select('is_present, consumption')
+      .eq('id', id)
+      .single();
 
-    const consumptionIndex = participant.consumption.findIndex(c => c.type === drinkType);
-    if (consumptionIndex === -1) {
-      participant.consumption.push({ type: drinkType, quantity: 1, updatedAt: new Date().toISOString() });
+    if (getError) throw getError;
+    if (!p.is_present) throw new Error('Somente participantes presentes podem consumir');
+
+    const consumption: DrinkConsumption[] = p.consumption || [];
+    const index = consumption.findIndex(c => c.type === drinkType);
+    
+    if (index === -1) {
+      consumption.push({ type: drinkType, quantity: 1, updatedAt: new Date().toISOString() });
     } else {
-      participant.consumption[consumptionIndex].quantity += 1;
-      participant.consumption[consumptionIndex].updatedAt = new Date().toISOString();
+      consumption[index].quantity += 1;
+      consumption[index].updatedAt = new Date().toISOString();
     }
 
-    this.saveParticipants(participants);
-    return participant;
+    return this.updateParticipant(id, { consumption });
   }
 
   async removeConsumption(id: string, drinkType: DrinkConsumption['type']): Promise<Participant> {
-    const participants = this.getParticipants();
-    const index = participants.findIndex(p => p.id === id);
-    if (index === -1) throw new Error('Participante não encontrado');
+    const { data: p, error: getError } = await supabase
+      .from('participants')
+      .select('consumption')
+      .eq('id', id)
+      .single();
+
+    if (getError) throw getError;
     
-    const participant = participants[index];
-    const consumptionIndex = participant.consumption.findIndex(c => c.type === drinkType);
+    const consumption: DrinkConsumption[] = p.consumption || [];
+    const index = consumption.findIndex(c => c.type === drinkType);
     
-    if (consumptionIndex !== -1 && participant.consumption[consumptionIndex].quantity > 0) {
-      participant.consumption[consumptionIndex].quantity -= 1;
-      participant.consumption[consumptionIndex].updatedAt = new Date().toISOString();
+    if (index !== -1 && consumption[index].quantity > 0) {
+      consumption[index].quantity -= 1;
+      consumption[index].updatedAt = new Date().toISOString();
     }
 
-    this.saveParticipants(participants);
-    return participant;
+    return this.updateParticipant(id, { consumption });
   }
 
   async getEvent(): Promise<AgapeEvent> {
-    const data = localStorage.getItem(STORAGE_KEYS.EVENT);
-    if (data) return JSON.parse(data);
+    const { data, error } = await supabase
+      .from('event_config')
+      .select('*')
+      .eq('id', 'current')
+      .single();
     
-    // Default event if none exists
-    const defaultEvent: AgapeEvent = {
-        id: '1',
-        name: 'Jantar de Ágape de Inverno',
-        date: new Date().toISOString(),
-        storeName: 'Augusta e Respeitável Loja Simbólica',
+    if (error || !data) {
+      return {
+          id: '1',
+          name: 'Jantar de Ágape de Inverno',
+          date: new Date().toISOString(),
+          storeName: 'Augusta e Respeitável Loja Simbólica',
+      };
+    }
+    
+    return {
+      id: data.id,
+      name: data.name,
+      date: data.date,
+      storeName: data.store_name,
+      logoUrl: data.logo_url,
+      adminEmail: data.admin_email,
+      adminPassword: data.admin_password
     };
-    return defaultEvent;
   }
 
   async updateEvent(event: Partial<AgapeEvent>): Promise<AgapeEvent> {
-    const current = await this.getEvent();
-    const updated = { ...current, ...event };
-    localStorage.setItem(STORAGE_KEYS.EVENT, JSON.stringify(updated));
-    return updated;
+    const dbUpdates: any = {};
+    if (event.name !== undefined) dbUpdates.name = event.name;
+    if (event.date !== undefined) dbUpdates.date = event.date;
+    if (event.storeName !== undefined) dbUpdates.store_name = event.storeName;
+    if (event.logoUrl !== undefined) dbUpdates.logo_url = event.logoUrl;
+    if (event.adminEmail !== undefined) dbUpdates.admin_email = event.adminEmail;
+    if (event.adminPassword !== undefined) dbUpdates.admin_password = event.adminPassword;
+
+    const { data, error } = await supabase
+      .from('event_config')
+      .update(dbUpdates)
+      .eq('id', 'current')
+      .select()
+      .single();
+
+    if (error) throw error;
+    
+    return {
+      id: data.id,
+      name: data.name,
+      date: data.date,
+      storeName: data.store_name,
+      logoUrl: data.logo_url,
+      adminEmail: data.admin_email,
+      adminPassword: data.admin_password
+    };
   }
 }
 

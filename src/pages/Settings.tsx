@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AgapeEvent } from '../types';
 import { storageService } from '../services/storageService';
-import { Save, Store, Calendar, FileText, Image as ImageIcon } from 'lucide-react';
+import { Save, Store, Calendar, FileText, Image as ImageIcon, Lock } from 'lucide-react';
 import { emailService } from '../services/emailService';
 
 export default function Settings() {
@@ -122,6 +122,25 @@ export default function Settings() {
                     value={event.adminEmail || ''}
                     onChange={(e) => setEvent({...event, adminEmail: e.target.value})}
                   />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-6 pt-6 border-t border-white/5">
+              <h3 className="text-[10px] uppercase tracking-[0.3em] font-black text-primary/60 border-b border-primary/10 pb-3">Segurança do Admin</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-2">
+                  <label className="text-[9px] uppercase tracking-widest text-white/30 font-black ml-1 flex items-center gap-2">
+                    <Lock size={12} className="text-primary/40" /> Nova Senha do Administrador
+                  </label>
+                  <input 
+                    type="password" 
+                    className="input-masonic w-full py-3"
+                    placeholder="Mínimo 6 caracteres"
+                    value={event.adminPassword || ''}
+                    onChange={(e) => setEvent({...event, adminPassword: e.target.value})}
+                  />
+                  <p className="text-[8px] text-white/20 uppercase tracking-widest mt-1">Padrão: agape777</p>
                 </div>
               </div>
             </div>
