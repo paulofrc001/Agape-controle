@@ -13,6 +13,7 @@ export interface Participant {
   symbolicName?: string;
   password?: string; // For individual brother access
   type: ParticipantType;
+  phone?: string;
   observations?: string;
   isPresent: boolean;
   checkInTime?: string;

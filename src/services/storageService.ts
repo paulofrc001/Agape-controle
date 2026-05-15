@@ -1,7 +1,152 @@
 import { Participant, AgapeEvent, DrinkConsumption } from '../types';
 import { supabase } from '../lib/supabase';
 
-class StorageService {
+const STORAGE_KEYS = {
+  PARTICIPANTS: 'agape_participants',
+  EVENT: 'agape_event',
+  HISTORY: 'agape_history'
+};
+
+const IS_SUPABASE_CONFIGURED = 
+  !!(import.meta.env as any).VITE_SUPABASE_URL && 
+  (import.meta.env as any).VITE_SUPABASE_URL.startsWith('http');
+
+console.log('Agape Storage Init - Supabase Configured:', IS_SUPABASE_CONFIGURED);
+
+class LocalStorageService {
+  getParticipants(): Participant[] {
+    try {
+      const data = localStorage.getItem(STORAGE_KEYS.PARTICIPANTS);
+      return data ? JSON.parse(data) : [];
+    } catch (e) {
+      console.error('Error reading participants from localStorage:', e);
+      return [];
+    }
+  }
+
+  saveParticipants(participants: Participant[]) {
+    try {
+      localStorage.setItem(STORAGE_KEYS.PARTICIPANTS, JSON.stringify(participants));
+    } catch (e) {
+      console.error('Error saving participants to localStorage:', e);
+    }
+  }
+
+  async getAllParticipants(): Promise<Participant[]> {
+    return this.getParticipants();
+  }
+
+  async addParticipant(participant: Omit<Participant, 'id' | 'createdAt' | 'consumption' | 'isPresent'>): Promise<Participant> {
+    const participants = this.getParticipants();
+    const id = typeof crypto?.randomUUID === 'function' 
+      ? crypto.randomUUID() 
+      : Math.random().toString(36).substring(2) + Date.now().toString(36);
+      
+    const newParticipant: Participant = {
+      ...participant,
+      id,
+      createdAt: new Date().toISOString(),
+      isPresent: false,
+      consumption: [],
+    };
+    participants.push(newParticipant);
+    this.saveParticipants(participants);
+    return newParticipant;
+  }
+
+  async finalizeSession(): Promise<void> {
+    const participants = this.getParticipants();
+    const event = await this.getEvent();
+    
+    // Save to history
+    const historyData = localStorage.getItem(STORAGE_KEYS.HISTORY);
+    let history = [];
+    try {
+      history = historyData ? JSON.parse(historyData) : [];
+      if (!Array.isArray(history)) history = [];
+    } catch (e) {
+      history = [];
+    }
+    
+    history.push({
+      event,
+      participants: participants.filter(p => p.isPresent || p.consumption.length > 0).map(p => ({
+        name: p.name,
+        type: p.type,
+        consumption: p.consumption
+      })),
+      finalizedAt: new Date().toISOString()
+    });
+    
+    localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(history));
+
+    // Reset current session fields
+    const finalized = participants.map(p => ({
+      ...p,
+      isPresent: false,
+      checkInTime: undefined,
+      consumption: []
+    }));
+    
+    this.saveParticipants(finalized);
+    
+    // Reset event details
+    await this.updateEvent({
+      name: 'Novo Ágape',
+      date: new Date().toISOString(),
+    });
+  }
+
+  async authenticateBrother(symbolicName: string, password?: string): Promise<Participant | null> {
+    const participants = this.getParticipants();
+    const brother = participants.find(p => 
+      p.type === 'Irmão' && 
+      p.symbolicName?.toLowerCase() === symbolicName.toLowerCase()
+    );
+
+    if (!brother) return null;
+    if (brother.password && brother.password !== password) return null;
+    
+    return brother;
+  }
+
+  async updateParticipant(id: string, updates: Partial<Participant>): Promise<Participant> {
+    const participants = this.getParticipants();
+    const index = participants.findIndex(p => p.id === id);
+    if (index === -1) throw new Error('Participante não encontrado');
+    
+    participants[index] = { ...participants[index], ...updates };
+    this.saveParticipants(participants);
+    return participants[index];
+  }
+
+  async deleteParticipant(id: string): Promise<void> {
+    const participants = this.getParticipants();
+    const filtered = participants.filter(p => p.id !== id);
+    this.saveParticipants(filtered);
+  }
+
+  async getEvent(): Promise<AgapeEvent> {
+    const data = localStorage.getItem(STORAGE_KEYS.EVENT);
+    if (data) return JSON.parse(data);
+    
+    return {
+        id: '1',
+        name: 'Jantar de Ágape de Inverno',
+        date: new Date().toISOString(),
+        storeName: 'Augusta e Respeitável Loja Simbólica',
+    };
+  }
+
+  async updateEvent(event: Partial<AgapeEvent>): Promise<AgapeEvent> {
+    const current = await this.getEvent();
+    const updated = { ...current, ...event };
+    localStorage.setItem(STORAGE_KEYS.EVENT, JSON.stringify(updated));
+    return updated;
+  }
+}
+
+class SupabaseService {
   async getAllParticipants(): Promise<Participant[]> {
     const { data, error } = await supabase
       .from('participants')
@@ -10,7 +155,6 @@ class StorageService {
     
     if (error) throw error;
     
-    // Map snake_case to camelCase
     return (data || []).map(p => ({
       id: p.id,
       name: p.name,
@@ -55,7 +199,6 @@ class StorageService {
     const participants = await this.getAllParticipants();
     const event = await this.getEvent();
     
-    // 1. Save to history
     const { error: historyError } = await supabase
       .from('agape_history')
       .insert([{
@@ -70,19 +213,6 @@ class StorageService {
 
     if (historyError) throw historyError;
 
-    // 2. Clear current session fields in all participants
-    const { error: clearError } = await supabase
-      .from('participants')
-      .update({
-        is_present: false,
-        check_in_time: null,
-        consumption: []
-      })
-      .neq('id', 'placeholder-to-match-all'); // This trick updates all if the filter matches
-
-    // If update fails on mass, we can do it with a range or specific logic if needed
-    // In Supabase, update without filter fails unless allowed. Let's use a better way:
-    // We'll update where id is in the list of existing IDs
     const ids = participants.map(p => p.id);
     if (ids.length > 0) {
       const { error: massError } = await supabase
@@ -92,7 +222,6 @@ class StorageService {
       if (massError) throw massError;
     }
     
-    // 3. Reset event details
     await this.updateEvent({
       name: 'Novo Ágape',
       date: new Date().toISOString(),
@@ -108,7 +237,6 @@ class StorageService {
       .single();
 
     if (error || !data) return null;
-    
     if (data.password && data.password !== password) return null;
     
     return {
@@ -168,68 +296,6 @@ class StorageService {
     if (error) throw error;
   }
 
-  async setPresence(id: string, isPresent: boolean): Promise<Participant> {
-    return this.updateParticipant(id, {
-      isPresent,
-      checkInTime: isPresent ? new Date().toISOString() : undefined,
-    });
-  }
-
-  async toggleAttendance(id: string): Promise<Participant> {
-    const { data: current, error: getError } = await supabase
-      .from('participants')
-      .select('is_present')
-      .eq('id', id)
-      .single();
-    
-    if (getError) throw getError;
-    
-    return this.setPresence(id, !current.is_present);
-  }
-
-  async addConsumption(id: string, drinkType: DrinkConsumption['type']): Promise<Participant> {
-    const { data: p, error: getError } = await supabase
-      .from('participants')
-      .select('is_present, consumption')
-      .eq('id', id)
-      .single();
-
-    if (getError) throw getError;
-    if (!p.is_present) throw new Error('Somente participantes presentes podem consumir');
-
-    const consumption: DrinkConsumption[] = p.consumption || [];
-    const index = consumption.findIndex(c => c.type === drinkType);
-    
-    if (index === -1) {
-      consumption.push({ type: drinkType, quantity: 1, updatedAt: new Date().toISOString() });
-    } else {
-      consumption[index].quantity += 1;
-      consumption[index].updatedAt = new Date().toISOString();
-    }
-
-    return this.updateParticipant(id, { consumption });
-  }
-
-  async removeConsumption(id: string, drinkType: DrinkConsumption['type']): Promise<Participant> {
-    const { data: p, error: getError } = await supabase
-      .from('participants')
-      .select('consumption')
-      .eq('id', id)
-      .single();
-
-    if (getError) throw getError;
-    
-    const consumption: DrinkConsumption[] = p.consumption || [];
-    const index = consumption.findIndex(c => c.type === drinkType);
-    
-    if (index !== -1 && consumption[index].quantity > 0) {
-      consumption[index].quantity -= 1;
-      consumption[index].updatedAt = new Date().toISOString();
-    }
-
-    return this.updateParticipant(id, { consumption });
-  }
-
   async getEvent(): Promise<AgapeEvent> {
     const { data, error } = await supabase
       .from('event_config')
@@ -284,6 +350,80 @@ class StorageService {
       adminEmail: data.admin_email,
       adminPassword: data.admin_password
     };
+  }
+}
+
+class StorageService {
+  private local = new LocalStorageService();
+  private supabase = new SupabaseService();
+
+  private get service() {
+    return IS_SUPABASE_CONFIGURED ? this.supabase : this.local;
+  }
+
+  async getAllParticipants() { return this.service.getAllParticipants(); }
+  async addParticipant(p: any) { return this.service.addParticipant(p); }
+  async finalizeSession() { return this.service.finalizeSession(); }
+  async authenticateBrother(s: string, p?: string) { return this.service.authenticateBrother(s, p); }
+  async updateParticipant(id: string, u: any) { return this.service.updateParticipant(id, u); }
+  async deleteParticipant(id: string) { return this.service.deleteParticipant(id); }
+  async getEvent() { return this.service.getEvent(); }
+  async updateEvent(e: any) { return this.service.updateEvent(e); }
+
+  // Shared logic helpers
+  async setPresence(id: string, isPresent: boolean): Promise<Participant> {
+    return this.updateParticipant(id, {
+      isPresent,
+      checkInTime: isPresent ? new Date().toISOString() : undefined,
+    });
+  }
+
+  async toggleAttendance(id: string): Promise<Participant> {
+    const participants = await this.getAllParticipants();
+    const participant = participants.find(p => p.id === id);
+    if (!participant) throw new Error('Participante não encontrado');
+    return this.setPresence(id, !participant.isPresent);
+  }
+
+  async addConsumption(id: string, drinkType: DrinkConsumption['type']): Promise<Participant> {
+    const participants = await this.getAllParticipants();
+    const p = participants.find(p => p.id === id);
+    if (!p) throw new Error('Participante não encontrado');
+    if (!p.isPresent) throw new Error('Somente participantes presentes podem consumir');
+
+    const consumption: DrinkConsumption[] = [...(p.consumption || [])];
+    const index = consumption.findIndex(c => c.type === drinkType);
+    
+    if (index === -1) {
+      consumption.push({ type: drinkType, quantity: 1, updatedAt: new Date().toISOString() });
+    } else {
+      consumption[index] = {
+        ...consumption[index],
+        quantity: consumption[index].quantity + 1,
+        updatedAt: new Date().toISOString()
+      };
+    }
+
+    return this.updateParticipant(id, { consumption });
+  }
+
+  async removeConsumption(id: string, drinkType: DrinkConsumption['type']): Promise<Participant> {
+    const participants = await this.getAllParticipants();
+    const p = participants.find(p => p.id === id);
+    if (!p) throw new Error('Participante não encontrado');
+    
+    const consumption: DrinkConsumption[] = [...(p.consumption || [])];
+    const index = consumption.findIndex(c => c.type === drinkType);
+    
+    if (index !== -1 && consumption[index].quantity > 0) {
+      consumption[index] = {
+        ...consumption[index],
+        quantity: consumption[index].quantity - 1,
+        updatedAt: new Date().toISOString()
+      };
+    }
+
+    return this.updateParticipant(id, { consumption });
   }
 }
 
