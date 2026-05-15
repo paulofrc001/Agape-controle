@@ -9,7 +9,8 @@ const STORAGE_KEYS = {
 
 const IS_SUPABASE_CONFIGURED = 
   !!(import.meta.env as any).VITE_SUPABASE_URL && 
-  (import.meta.env as any).VITE_SUPABASE_URL.startsWith('http');
+  (import.meta.env as any).VITE_SUPABASE_URL.startsWith('http') &&
+  !!(import.meta.env as any).VITE_SUPABASE_ANON_KEY;
 
 console.log('Agape Storage Init - Supabase Configured:', IS_SUPABASE_CONFIGURED);
 
