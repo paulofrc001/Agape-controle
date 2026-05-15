@@ -7,7 +7,9 @@ import {
   UserPlus,
   Filter,
   CheckCircle2,
-  XCircle
+  XCircle,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { Participant, ParticipantType } from '../types';
 import { storageService } from '../services/storageService';
@@ -21,6 +23,7 @@ export default function Participants() {
   const [filterType, setFilterType] = useState<string>('all');
   const [editingParticipant, setEditingParticipant] = useState<Participant | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -232,13 +235,22 @@ export default function Participants() {
                 {formData.type === 'Irmão' && (
                   <div className="space-y-1">
                     <label className="text-xs uppercase tracking-widest text-white/40">Palavra de Passe (Para Acesso Individual)</label>
-                    <input 
-                      type="password" 
-                      className="input-masonic w-full"
-                      placeholder="Senha para o irmão"
-                      value={formData.password}
-                      onChange={(e) => setFormData({...formData, password: e.target.value})}
-                    />
+                    <div className="relative">
+                      <input 
+                        type={showPassword ? "text" : "password"} 
+                        className="input-masonic w-full pr-10"
+                        placeholder="Senha para o irmão"
+                        value={formData.password}
+                        onChange={(e) => setFormData({...formData, password: e.target.value})}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-white/20 hover:text-primary transition-colors"
+                      >
+                        {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                      </button>
+                    </div>
                   </div>
                 )}
                 <div className="space-y-1">

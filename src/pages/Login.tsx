@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Lock, User as UserIcon, ArrowRight } from 'lucide-react';
+import { Shield, Lock, User as UserIcon, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'motion/react';
 import { storageService } from '../services/storageService';
 import { Participant } from '../types';
@@ -11,6 +11,7 @@ interface LoginProps {
 export default function Login({ onLogin }: LoginProps) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [event, setEvent] = useState<any>(null);
 
@@ -86,12 +87,19 @@ export default function Login({ onLogin }: LoginProps) {
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/10" size={14} />
                   <input 
                     required
-                    type="password" 
+                    type={showPassword ? "text" : "password"} 
                     placeholder="SENHA"
-                    className="input-masonic w-full pl-12 py-4"
+                    className="input-masonic w-full pl-12 pr-10 py-4"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-white/20 hover:text-primary transition-colors"
+                  >
+                    {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                  </button>
                 </div>
               </div>
             </div>

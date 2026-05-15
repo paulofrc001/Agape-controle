@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { AgapeEvent } from '../types';
 import { storageService } from '../services/storageService';
-import { Save, Store, Calendar, FileText, Image as ImageIcon, Lock } from 'lucide-react';
+import { Save, Store, Calendar, FileText, Image as ImageIcon, Lock, Eye, EyeOff } from 'lucide-react';
 import { emailService } from '../services/emailService';
 
 export default function Settings() {
   const [event, setEvent] = useState<AgapeEvent | null>(null);
   const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -133,13 +134,22 @@ export default function Settings() {
                   <label className="text-[9px] uppercase tracking-widest text-white/30 font-black ml-1 flex items-center gap-2">
                     <Lock size={12} className="text-primary/40" /> Nova Senha do Administrador
                   </label>
-                  <input 
-                    type="password" 
-                    className="input-masonic w-full py-3"
-                    placeholder="Mínimo 6 caracteres"
-                    value={event.adminPassword || ''}
-                    onChange={(e) => setEvent({...event, adminPassword: e.target.value})}
-                  />
+                  <div className="relative">
+                    <input 
+                      type={showPassword ? "text" : "password"} 
+                      className="input-masonic w-full py-3 pr-10"
+                      placeholder="Mínimo 6 caracteres"
+                      value={event.adminPassword || ''}
+                      onChange={(e) => setEvent({...event, adminPassword: e.target.value})}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-white/20 hover:text-primary transition-colors"
+                    >
+                      {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                    </button>
+                  </div>
                   <p className="text-[8px] text-white/20 uppercase tracking-widest mt-1">Padrão: agape777</p>
                 </div>
               </div>
