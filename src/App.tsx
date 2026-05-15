@@ -9,9 +9,7 @@ import {
   Settings as SettingsIcon,
   LogOut,
   Menu,
-  X,
-  Sun,
-  Moon
+  X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from './lib/utils';
@@ -34,13 +32,11 @@ const NAV_ITEMS = [
   { path: '/reports', label: 'Relatórios', icon: BarChart3 },
 ];
 
-function AppLayout({ children, onLogout, userType, navItems, isLightMode, onToggleTheme }: { 
+function AppLayout({ children, onLogout, userType, navItems }: { 
   children: React.ReactNode, 
   onLogout: () => void, 
   userType: 'admin' | 'brother',
-  navItems: typeof NAV_ITEMS,
-  isLightMode: boolean,
-  onToggleTheme: () => void
+  navItems: typeof NAV_ITEMS
 }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
@@ -56,9 +52,6 @@ function AppLayout({ children, onLogout, userType, navItems, isLightMode, onTogg
           <span className="font-bold gold-text-gradient tracking-widest text-sm uppercase">Ágape</span>
         </div>
         <div className="flex items-center gap-4">
-          <button onClick={onToggleTheme} className="text-[var(--text-main)]">
-            {isLightMode ? <Moon size={18} /> : <Sun size={18} />}
-          </button>
           <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-[var(--text-main)]">
             {isMobileMenuOpen ? <X /> : <Menu />}
           </button>
@@ -79,18 +72,6 @@ function AppLayout({ children, onLogout, userType, navItems, isLightMode, onTogg
           <div className="mt-4 px-3 py-1 bg-primary/10 border border-primary/20 rounded text-[8px] uppercase tracking-widest font-black text-primary">
             Acesso: {userType === 'admin' ? 'Mestre de Banquete' : 'Irmão'}
           </div>
-        </div>
-
-        <div className="px-8 pb-4 flex justify-center md:flex hidden">
-           <button 
-             onClick={onToggleTheme}
-             className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/20 text-primary hover:bg-primary/5 transition-all"
-           >
-             {isLightMode ? <Moon size={12} /> : <Sun size={12} />}
-             <span className="text-[8px] uppercase font-bold tracking-widest">
-               {isLightMode ? 'Modo Noturno' : 'Modo Diurno'}
-             </span>
-           </button>
         </div>
 
         <nav className="flex-1 px-4 py-4 space-y-1">
@@ -157,19 +138,6 @@ function AppLayout({ children, onLogout, userType, navItems, isLightMode, onTogg
 
 export default function App() {
   const [auth, setAuth] = useState<{ isAuthenticated: boolean, type: 'admin' | 'brother', user?: Participant } | null>(null);
-  const [isLightMode, setIsLightMode] = useState(() => {
-    return localStorage.getItem('agape-theme') !== 'dark'; // Default to light if not explicitly dark
-  });
-
-  useEffect(() => {
-    if (isLightMode) {
-      document.body.classList.add('light');
-      localStorage.setItem('agape-theme', 'light');
-    } else {
-      document.body.classList.remove('light');
-      localStorage.setItem('agape-theme', 'dark');
-    }
-  }, [isLightMode]);
 
   const handleLogout = () => {
     setAuth(null);
@@ -178,8 +146,6 @@ export default function App() {
   if (!auth?.isAuthenticated) {
     return (
       <Login 
-        isLightMode={isLightMode}
-        onToggleTheme={() => setIsLightMode(!isLightMode)}
         onLogin={(type, user) => setAuth({ isAuthenticated: true, type, user })} 
       />
     );
@@ -195,8 +161,6 @@ export default function App() {
         onLogout={handleLogout} 
         userType={auth.type} 
         navItems={filteredNavItems}
-        isLightMode={isLightMode}
-        onToggleTheme={() => setIsLightMode(!isLightMode)}
       >
         <Routes>
           <Route path="/" element={<Dashboard userType={auth.type} participantId={auth.user?.id} />} />

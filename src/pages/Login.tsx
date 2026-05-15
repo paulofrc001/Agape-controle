@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Lock, User as UserIcon, ArrowRight, Eye, EyeOff, Sun, Moon } from 'lucide-react';
+import { Shield, Lock, User as UserIcon, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'motion/react';
 import { storageService } from '../services/storageService';
 import { Participant } from '../types';
 
 interface LoginProps {
   onLogin: (type: 'admin' | 'brother', user?: Participant) => void;
-  isLightMode: boolean;
-  onToggleTheme: () => void;
 }
 
-export default function Login({ onLogin, isLightMode, onToggleTheme }: LoginProps) {
+export default function Login({ onLogin }: LoginProps) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -46,29 +44,16 @@ export default function Login({ onLogin, isLightMode, onToggleTheme }: LoginProp
 
   return (
     <div className="min-h-screen bg-surface-dark flex items-center justify-center p-4">
-      {!isLightMode && (
-        <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-10">
-           <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/30 blur-[120px]" />
-           <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-primary/10 blur-[120px]" />
-        </div>
-      )}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-10">
+         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/30 blur-[120px]" />
+         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-primary/10 blur-[120px]" />
+      </div>
 
       <motion.div 
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         className="w-full max-w-sm relative z-10"
       >
-        <div className="absolute top-0 right-0 -mt-12">
-          <button 
-            onClick={onToggleTheme}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/20 bg-surface-sidebar text-primary hover:bg-primary/5 transition-all shadow-lg"
-          >
-            {isLightMode ? <Moon size={12} /> : <Sun size={12} />}
-            <span className="text-[8px] uppercase font-bold tracking-widest">
-              {isLightMode ? 'Modo Noturno' : 'Modo Diurno'}
-            </span>
-          </button>
-        </div>
         <div className="text-center mb-10">
           <div className="w-20 h-20 mx-auto rounded-full border border-primary p-2 mb-6 flex items-center justify-center">
              <div className="w-full h-full border border-primary/40 rounded-full flex items-center justify-center text-primary">
