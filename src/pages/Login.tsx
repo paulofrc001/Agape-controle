@@ -46,10 +46,12 @@ export default function Login({ onLogin, isLightMode, onToggleTheme }: LoginProp
 
   return (
     <div className="min-h-screen bg-surface-dark flex items-center justify-center p-4">
-      <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-10">
-         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/30 blur-[120px]" />
-         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-primary/10 blur-[120px]" />
-      </div>
+      {!isLightMode && (
+        <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-10">
+           <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/30 blur-[120px]" />
+           <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-primary/10 blur-[120px]" />
+        </div>
+      )}
 
       <motion.div 
         initial={{ opacity: 0, scale: 0.9 }}
