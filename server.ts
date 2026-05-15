@@ -13,36 +13,39 @@ export async function createServer() {
 
   // API Routes
   app.post("/api/send-report", async (req, res) => {
-    console.log("API: send-report request received");
-    const { to, subject, html, attachments } = req.body;
-
-    if (!to) {
-      return res.status(400).json({ error: "Recipient email is required" });
-    }
-
-    const smtpUser = process.env.SMTP_USER;
-    const smtpPass = (process.env.SMTP_PASS || "").replace(/\s/g, "");
-    
-    if (!smtpUser || !smtpPass) {
-      console.error("SMTP credentials missing");
-      return res.status(500).json({ error: "SMTP configuration missing on server" });
-    }
-
-    const port = parseInt(process.env.SMTP_PORT || "587");
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || "smtp.gmail.com",
-      port: port,
-      secure: port === 465,
-      auth: {
-        user: smtpUser,
-        pass: smtpPass,
-      },
-      tls: {
-        rejectUnauthorized: false
-      }
-    });
-
+    console.log("API Start: /api/send-report");
     try {
+      const { to, subject, html, attachments } = req.body;
+      console.log(`Payload: to=${to}, subject=${subject}`);
+
+      if (!to) {
+        return res.status(400).json({ error: "Recipient email is required" });
+      }
+
+      const smtpUser = process.env.SMTP_USER;
+      const smtpPass = (process.env.SMTP_PASS || "").replace(/\s/g, "");
+      
+      console.log(`Config check: User=${!!smtpUser}, Pass=${!!smtpPass}, Host=${process.env.SMTP_HOST}`);
+
+      if (!smtpUser || !smtpPass) {
+        console.error("SMTP credentials missing in environment variables");
+        return res.status(500).json({ error: "SMTP configuration missing on server. Check Vercel Environment Variables." });
+      }
+
+      const port = parseInt(process.env.SMTP_PORT || "587");
+      const transporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST || "smtp.gmail.com",
+        port: port,
+        secure: port === 465,
+        auth: {
+          user: smtpUser,
+          pass: smtpPass,
+        },
+        tls: {
+          rejectUnauthorized: false
+        }
+      });
+
       console.log(`Attempting to send email to ${to}...`);
       await transporter.sendMail({
         from: `"Sistema de Ágape" <${smtpUser}>`,
@@ -55,9 +58,9 @@ export async function createServer() {
       console.log("Email sent successfully");
       res.json({ success: true, message: "Email sent successfully" });
     } catch (error: any) {
-      console.error("Email error detail:", error);
+      console.error("API Error (/api/send-report):", error);
       res.status(500).json({ 
-        error: "Failed to send email", 
+        error: "Failed to process request", 
         details: error.message,
         code: error.code
       });
