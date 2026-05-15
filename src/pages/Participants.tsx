@@ -95,8 +95,8 @@ export default function Participants() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-primary/10 pb-6">
         <div>
-          <h2 className="text-2xl font-serif text-white tracking-tight italic">Participantes</h2>
-          <p className="text-white/30 text-[10px] uppercase tracking-widest mt-1">Gestão de convidados e irmãos</p>
+          <h2 className="text-2xl font-serif text-[var(--text-main)] tracking-tight italic">Participantes</h2>
+          <p className="text-[var(--text-dim)] text-[10px] uppercase tracking-widest mt-1">Gestão de convidados e irmãos</p>
         </div>
         <button 
           onClick={() => handleOpenModal()}
@@ -108,7 +108,7 @@ export default function Participants() {
 
       <div className="flex flex-col md:flex-row gap-4 items-center">
         <div className="relative flex-1 w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/20" size={14} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" size={14} />
           <input 
             type="text" 
             placeholder="BUSCAR NOME..." 
@@ -126,7 +126,7 @@ export default function Participants() {
                 "px-3 py-1.5 rounded text-[9px] uppercase tracking-widest transition-all border shrink-0",
                 filterType === type 
                   ? "bg-primary/10 text-primary border-primary/30 font-bold" 
-                  : "bg-white/5 text-white/40 border-transparent hover:bg-white/10"
+                  : "bg-[var(--input-bg)] text-[var(--text-dim)] border-transparent hover:bg-white/10"
               )}
             >
               {type === 'all' ? 'Todos' : type}
@@ -144,15 +144,15 @@ export default function Participants() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95 }}
               key={p.id}
-              className="bg-surface-sidebar border border-white/5 p-5 group hover:border-primary/40 transition-all rounded-xl"
+              className="bg-surface-sidebar border border-[var(--border-main)] p-5 group hover:border-primary/40 transition-all rounded-xl"
             >
               <div className="flex justify-between items-start mb-4">
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-primary font-serif italic text-lg border border-primary/20">
+                  <div className="w-10 h-10 rounded-full bg-[var(--input-bg)] flex items-center justify-center text-primary font-serif italic text-lg border border-primary/20">
                     {p.name.charAt(0)}
                   </div>
                   <div>
-                    <h4 className="font-bold text-sm leading-tight text-white/90">{p.name}</h4>
+                    <h4 className="font-bold text-sm leading-tight text-[var(--text-main)]">{p.name}</h4>
                     {p.symbolicName && (
                       <p className="text-primary/60 text-[9px] uppercase tracking-widest mt-0.5">{p.symbolicName}</p>
                     )}
@@ -161,26 +161,26 @@ export default function Participants() {
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button 
                     onClick={() => handleOpenModal(p)}
-                    className="p-1.5 hover:bg-white/5 rounded text-white/30 hover:text-white transition-colors"
+                    className="p-1.5 hover:bg-white/5 rounded text-[var(--text-muted)] hover:text-primary transition-colors"
                   >
                     <Edit2 size={14} />
                   </button>
                   <button 
                     onClick={() => handleDelete(p.id)}
-                    className="p-1.5 hover:bg-rose-500/10 rounded text-white/30 hover:text-rose-400 transition-colors"
+                    className="p-1.5 hover:bg-rose-500/10 rounded text-[var(--text-muted)] hover:text-rose-400 transition-colors"
                   >
                     <Trash2 size={14} />
                   </button>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between mt-auto pt-4 border-t border-white/5">
+              <div className="flex items-center justify-between mt-auto pt-4 border-t border-[var(--border-main)]">
                 <span className="badge-masonic">
                   {p.type}
                 </span>
                 <span className={cn(
                   "flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest",
-                  p.isPresent ? "text-emerald-500" : "text-white/20"
+                  p.isPresent ? "text-emerald-500" : "text-[var(--text-muted)]"
                 )}>
                   {p.isPresent ? 'Presente' : 'Ausente'}
                 </span>
@@ -205,14 +205,14 @@ export default function Participants() {
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="relative w-full max-w-md bg-surface-card border border-white/10 rounded-2xl shadow-3xl p-8"
+              className="relative w-full max-w-md bg-surface-card border border-[var(--border-input)] rounded-2xl shadow-3xl p-8"
             >
               <h3 className="text-2xl font-bold mb-6 gold-text-gradient">
                 {editingParticipant ? 'Editar Participante' : 'Novo Participante'}
               </h3>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-1">
-                  <label className="text-xs uppercase tracking-widest text-white/40">Nome Completo</label>
+                  <label className="text-xs uppercase tracking-widest text-[var(--text-dim)]">Nome Completo</label>
                   <input 
                     required
                     type="text" 
@@ -223,7 +223,7 @@ export default function Participants() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs uppercase tracking-widest text-white/40">Nome Simbólico (Opcional)</label>
+                  <label className="text-xs uppercase tracking-widest text-[var(--text-dim)]">Nome Simbólico (Opcional)</label>
                   <input 
                     type="text" 
                     className="input-masonic w-full"
@@ -234,7 +234,7 @@ export default function Participants() {
                 </div>
                 {formData.type === 'Irmão' && (
                   <div className="space-y-1">
-                    <label className="text-xs uppercase tracking-widest text-white/40">Palavra de Passe (Para Acesso Individual)</label>
+                    <label className="text-xs uppercase tracking-widest text-[var(--text-dim)]">Palavra de Passe (Para Acesso Individual)</label>
                     <div className="relative">
                       <input 
                         type={showPassword ? "text" : "password"} 
@@ -246,7 +246,7 @@ export default function Participants() {
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-white/20 hover:text-primary transition-colors"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-primary transition-colors"
                       >
                         {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                       </button>
@@ -254,7 +254,7 @@ export default function Participants() {
                   </div>
                 )}
                 <div className="space-y-1">
-                  <label className="text-xs uppercase tracking-widest text-white/40">Tipo</label>
+                  <label className="text-xs uppercase tracking-widest text-[var(--text-dim)]">Tipo</label>
                   <select 
                     className="input-masonic w-full appearance-none"
                     value={formData.type}
@@ -266,7 +266,7 @@ export default function Participants() {
                   </select>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs uppercase tracking-widest text-white/40">Observações</label>
+                  <label className="text-xs uppercase tracking-widest text-[var(--text-dim)]">Observações</label>
                   <textarea 
                     className="input-masonic w-full h-24 resize-none"
                     value={formData.observations}

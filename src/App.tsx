@@ -44,16 +44,18 @@ function AppLayout({ children, onLogout, userType, navItems }: {
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
       {/* Mobile Header */}
-      <div className="md:hidden flex items-center justify-between p-4 border-b border-white/10 bg-surface-card">
+      <div className="md:hidden flex items-center justify-between p-4 border-b border-[var(--border-main)] bg-surface-card transition-colors">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-full border border-primary flex items-center justify-center p-1">
              <div className="w-full h-full bg-primary rounded-full animate-pulse" />
           </div>
           <span className="font-bold gold-text-gradient tracking-widest text-sm uppercase">Ágape</span>
         </div>
-        <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
-          {isMobileMenuOpen ? <X /> : <Menu />}
-        </button>
+        <div className="flex items-center gap-4">
+          <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-[var(--text-main)]">
+            {isMobileMenuOpen ? <X /> : <Menu />}
+          </button>
+        </div>
       </div>
 
       {/* Sidebar */}
@@ -66,7 +68,7 @@ function AppLayout({ children, onLogout, userType, navItems }: {
             <span className="text-primary text-2xl font-serif">G</span>
           </div>
           <h1 className="text-[10px] tracking-[0.3em] uppercase text-primary font-medium text-center">Sistema de Ágape</h1>
-          <p className="text-[9px] text-white/30 mt-1 uppercase tracking-widest">Controle Operacional</p>
+          <p className="text-[9px] text-[var(--text-dim)] mt-1 uppercase tracking-widest">Controle Operacional</p>
           <div className="mt-4 px-3 py-1 bg-primary/10 border border-primary/20 rounded text-[8px] uppercase tracking-widest font-black text-primary">
             Acesso: {userType === 'admin' ? 'Mestre de Banquete' : 'Irmão'}
           </div>
@@ -82,32 +84,32 @@ function AppLayout({ children, onLogout, userType, navItems }: {
                 "flex items-center gap-3 px-4 py-3 rounded transition-all group border",
                 location.pathname === item.path 
                   ? "bg-primary/10 text-primary border-primary/30 font-bold" 
-                  : "text-white/40 hover:text-white hover:bg-white/5 border-transparent"
+                  : "text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--border-main)] border-transparent"
               )}
             >
               <item.icon size={16} className={cn(
                 "group-hover:scale-110 transition-transform",
-                location.pathname === item.path ? "text-primary" : "text-white/20"
+                location.pathname === item.path ? "text-primary" : "text-[var(--text-muted)]"
               )} />
               <span className="text-[10px] uppercase font-bold tracking-wider">{item.label}</span>
             </Link>
           ))}
         </nav>
 
-        <div className="p-6 border-t border-primary/10">
+        <div className="p-6 border-t border-[var(--border-main)]">
           {userType === 'admin' && (
             <Link
               to="/settings"
               onClick={() => setIsMobileMenuOpen(false)}
-              className="flex items-center gap-3 px-4 py-3 rounded text-white/40 hover:text-white transition-all w-full"
+              className="flex items-center gap-3 px-4 py-3 rounded text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-primary/5 transition-all w-full"
             >
-              <SettingsIcon size={14} className="text-white/20" />
+              <SettingsIcon size={14} className="text-[var(--text-muted)]" />
               <span className="text-[10px] uppercase font-bold tracking-widest">Configurações</span>
             </Link>
           )}
           <button
             onClick={onLogout}
-            className="flex items-center gap-3 px-4 py-3 rounded text-rose-500/60 hover:bg-rose-500/10 transition-all w-full mt-1"
+            className="flex items-center gap-3 px-4 py-3 rounded text-rose-500/80 hover:bg-rose-500/10 transition-all w-full mt-1"
           >
             <LogOut size={14} />
             <span className="text-[10px] uppercase font-bold tracking-widest">Sair</span>
@@ -141,7 +143,13 @@ export default function App() {
     setAuth(null);
   };
 
-  if (!auth?.isAuthenticated) return <Login onLogin={(type, user) => setAuth({ isAuthenticated: true, type, user })} />;
+  if (!auth?.isAuthenticated) {
+    return (
+      <Login 
+        onLogin={(type, user) => setAuth({ isAuthenticated: true, type, user })} 
+      />
+    );
+  }
 
   const filteredNavItems = auth.type === 'admin' 
     ? NAV_ITEMS 
@@ -149,7 +157,11 @@ export default function App() {
 
   return (
     <Router>
-      <AppLayout onLogout={handleLogout} userType={auth.type} navItems={filteredNavItems}>
+      <AppLayout 
+        onLogout={handleLogout} 
+        userType={auth.type} 
+        navItems={filteredNavItems}
+      >
         <Routes>
           <Route path="/" element={<Dashboard userType={auth.type} participantId={auth.user?.id} />} />
           {auth.type === 'admin' && (

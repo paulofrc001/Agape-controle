@@ -25,10 +25,10 @@ interface StatCardProps {
 
 function StatCard({ label, value, icon: Icon, color }: StatCardProps) {
   return (
-    <div className="bg-[#151515] border border-white/5 p-6 rounded-xl flex flex-col justify-center hover:border-primary/20 transition-all">
-      <p className="text-white/40 text-[10px] uppercase tracking-widest mb-1">{label}</p>
+    <div className="bg-surface-card border border-[var(--border-main)] p-6 rounded-xl flex flex-col justify-center hover:border-primary/20 transition-all">
+      <p className="text-[var(--text-dim)] text-[10px] uppercase tracking-widest mb-1">{label}</p>
       <div className="flex items-center justify-between">
-        <p className={cn("text-3xl font-serif", label === 'Consumo Total' ? 'text-primary' : 'text-white')}>{value}</p>
+        <p className={cn("text-3xl font-serif", label === 'Consumo Total' ? 'text-primary' : 'text-[var(--text-main)]')}>{value}</p>
         <Icon size={20} className={cn("opacity-20", color.split(' ')[1])} />
       </div>
     </div>
@@ -134,7 +134,7 @@ export default function Dashboard({ userType, participantId }: { userType?: 'adm
     <div className="space-y-8 h-full">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-primary/20 pb-6 mb-8">
         <div>
-          <h2 className="text-2xl font-serif italic text-white tracking-tight">{event?.storeName || 'Loja Maçônica'}</h2>
+          <h2 className="text-2xl font-serif italic text-[var(--text-main)] tracking-tight">{event?.storeName || 'Loja Maçônica'}</h2>
           <div className="flex items-center gap-4 text-primary text-[10px] uppercase tracking-[0.2em] font-bold mt-1">
              <span>{event?.name}</span>
              <span className="w-1 h-1 bg-primary/40 rounded-full" />
@@ -178,26 +178,26 @@ export default function Dashboard({ userType, participantId }: { userType?: 'adm
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-8 space-y-6">
-          <div className="bg-surface-sidebar border border-white/5 p-8 rounded-2xl">
+          <div className="bg-surface-sidebar border border-[var(--border-main)] p-8 rounded-2xl">
             <div className="flex items-center justify-between mb-8">
-               <h3 className="text-[10px] uppercase tracking-[0.3em] font-bold text-gray-500">
+               <h4 className="text-[10px] uppercase tracking-[0.3em] font-bold text-[var(--text-dim)]">
                  Consumo Coletivo
-               </h3>
+               </h4>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
               {['Cerveja 600ml', 'Cerveja Romarinho', 'Cerveja sem Álcool', 'Refrigerante', 'Água'].map((drink) => (
                 <div key={drink} className="space-y-3">
                    <div className="flex justify-between items-end">
-                      <span className="text-xs font-bold uppercase tracking-tight text-white/70">{drink}</span>
+                      <span className="text-xs font-bold uppercase tracking-tight text-[var(--text-dim)]">{drink}</span>
                       <span className="text-2xl font-serif text-primary">{drinkTotals[drink] || 0}</span>
                    </div>
-                    <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                    <div className="h-1 bg-primary/10 rounded-full overflow-hidden">
                        <motion.div 
                          initial={{ width: 0 }}
                          animate={{ 
                            width: `${Math.min(100, ((drinkTotals[drink] || 0) / (Math.max(...(Object.values(drinkTotals) as number[]), 1))) * 100)}%` 
                          }}
-                         className="h-full bg-primary/60"
+                         className="h-full bg-primary"
                        />
                     </div>
                 </div>
@@ -210,8 +210,8 @@ export default function Dashboard({ userType, participantId }: { userType?: 'adm
            {userType === 'brother' && currentBrother && !currentBrother.isPresent && (
              <div className="bg-primary/10 border border-primary/30 p-8 rounded-2xl shadow-xl text-center">
                 <CheckCircle className="text-primary mx-auto mb-4" size={32} />
-                <h3 className="text-lg font-serif italic mb-2 text-white">Bem-vindo, Irmão!</h3>
-                <p className="text-[10px] text-white/50 uppercase tracking-widest mb-6 leading-relaxed">
+                <h3 className="text-lg font-serif italic mb-2 text-[var(--text-main)] transition-colors">Bem-vindo, Irmão!</h3>
+                <p className="text-[10px] text-[var(--text-dim)] uppercase tracking-widest mb-6 leading-relaxed transition-colors">
                   Para liberar o lançamento de consumo e registrar sua presença oficial, clique no botão abaixo.
                 </p>
                 <button onClick={handleConfirmPresence} className="btn-primary w-full py-4">
@@ -224,8 +224,8 @@ export default function Dashboard({ userType, participantId }: { userType?: 'adm
               <div className="w-16 h-16 rounded-full border border-primary flex items-center justify-center mb-4">
                  <Beer className="text-primary" size={24} />
               </div>
-              <h3 className="text-sm font-serif italic mb-2 tracking-wide text-white">Lançamento Rápido</h3>
-              <p className="text-[9px] text-white/30 uppercase tracking-[0.2em] mb-6">Operação em tempo real</p>
+              <h3 className="text-sm font-serif italic mb-2 tracking-wide text-[var(--text-main)]">Lançamento Rápido</h3>
+              <p className="text-[9px] text-[var(--text-dim)] uppercase tracking-[0.2em] mb-6">Operação em tempo real</p>
               <Link to="/consumption" className="btn-primary w-full py-4 flex items-center justify-center gap-3">
                  <Plus size={16} /> Lançar Agora
               </Link>

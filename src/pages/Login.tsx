@@ -44,15 +44,15 @@ export default function Login({ onLogin }: LoginProps) {
 
   return (
     <div className="min-h-screen bg-surface-dark flex items-center justify-center p-4">
-      <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
-         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/20 blur-[120px]" />
-         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-secondary/20 blur-[120px]" />
+      <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-10">
+         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/30 blur-[120px]" />
+         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-primary/10 blur-[120px]" />
       </div>
 
       <motion.div 
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-sm relative"
+        className="w-full max-w-sm relative z-10"
       >
         <div className="text-center mb-10">
           <div className="w-20 h-20 mx-auto rounded-full border border-primary p-2 mb-6 flex items-center justify-center">
@@ -61,16 +61,16 @@ export default function Login({ onLogin }: LoginProps) {
              </div>
           </div>
           <h1 className="text-xs font-bold text-primary uppercase tracking-[0.4em]">Controle de Ágape</h1>
-          <p className="text-white/20 text-[9px] uppercase tracking-widest mt-2">{event?.storeName || 'Oficina Maçônica'}</p>
+          <p className="text-[var(--text-dim)] text-[9px] uppercase tracking-widest mt-2">{event?.storeName || 'Oficina Maçônica'}</p>
         </div>
 
-        <div className="bg-surface-sidebar border border-white/5 p-10 rounded-2xl shadow-[0_32px_64px_-12px_rgba(0,0,0,0.8)]">
+        <div className="bg-surface-sidebar border border-[var(--border-main)] p-10 rounded-2xl shadow-2xl">
           <form onSubmit={handleSubmit} className="space-y-8">
             <div className="space-y-4">
               <div className="space-y-1">
-                <label className="text-[9px] uppercase tracking-widest text-white/30 font-black ml-1">Identificação</label>
+                <label className="text-[9px] uppercase tracking-widest text-[var(--text-dim)] font-black ml-1">Identificação</label>
                 <div className="relative">
-                  <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-white/10" size={14} />
+                  <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" size={14} />
                   <input 
                     required
                     type="text" 
@@ -82,9 +82,9 @@ export default function Login({ onLogin }: LoginProps) {
                 </div>
               </div>
               <div className="space-y-1">
-                <label className="text-[9px] uppercase tracking-widest text-white/30 font-black ml-1">Palavra de Passe</label>
+                <label className="text-[9px] uppercase tracking-widest text-[var(--text-dim)] font-black ml-1">Palavra de Passe</label>
                 <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/10" size={14} />
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" size={14} />
                   <input 
                     required
                     type={showPassword ? "text" : "password"} 
@@ -96,7 +96,7 @@ export default function Login({ onLogin }: LoginProps) {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-white/20 hover:text-primary transition-colors"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-primary transition-colors"
                   >
                     {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                   </button>
@@ -114,7 +114,7 @@ export default function Login({ onLogin }: LoginProps) {
           </form>
         </div>
 
-        <p className="text-center text-[10px] text-white/20 uppercase tracking-[0.3em] mt-8">
+        <p className="text-center text-[10px] text-[var(--text-dim)] uppercase tracking-[0.3em] mt-8">
           Sinceridade • Verdade • União
         </p>
       </motion.div>

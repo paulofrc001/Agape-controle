@@ -34,20 +34,20 @@ export default function Settings() {
     <div className="space-y-8 h-full">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-primary/10 pb-6 mb-8">
         <div>
-          <h2 className="text-2xl font-serif text-white tracking-tight italic">Configurações</h2>
-          <p className="text-white/30 text-[10px] uppercase tracking-widest mt-1">Personalização do ambiente de Ágape</p>
+          <h2 className="text-2xl font-serif text-[var(--text-main)] tracking-tight italic">Configurações</h2>
+          <p className="text-[var(--text-dim)] text-[10px] uppercase tracking-widest mt-1">Personalização do ambiente de Ágape</p>
         </div>
       </header>
 
       <div className="max-w-3xl">
         <form onSubmit={handleSave} className="space-y-6">
-          <div className="bg-surface-sidebar border border-white/5 p-8 rounded-2xl shadow-xl space-y-10">
+          <div className="bg-surface-sidebar border border-[var(--border-main)] p-8 rounded-2xl shadow-xl space-y-10">
             <div className="space-y-6">
               <h3 className="text-[10px] uppercase tracking-[0.3em] font-black text-primary/60 border-b border-primary/10 pb-3">Informações da Oficina</h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-2">
-                  <label className="text-[9px] uppercase tracking-widest text-white/30 font-black ml-1 flex items-center gap-2">
+                  <label className="text-[9px] uppercase tracking-widest text-[var(--text-dim)] font-black ml-1 flex items-center gap-2">
                     <Store size={12} className="text-primary/40" /> Nome da Loja
                   </label>
                   <input 
@@ -58,7 +58,7 @@ export default function Settings() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[9px] uppercase tracking-widest text-white/30 font-black ml-1 flex items-center gap-2">
+                  <label className="text-[9px] uppercase tracking-widest text-[var(--text-dim)] font-black ml-1 flex items-center gap-2">
                     <FileText size={12} className="text-primary/40" /> Identificação do Ágape
                   </label>
                   <input 
@@ -72,7 +72,7 @@ export default function Settings() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-2">
-                  <label className="text-[9px] uppercase tracking-widest text-white/30 font-black ml-1 flex items-center gap-2">
+                  <label className="text-[9px] uppercase tracking-widest text-[var(--text-dim)] font-black ml-1 flex items-center gap-2">
                     <Calendar size={12} className="text-primary/40" /> Data do Evento
                   </label>
                   <input 
@@ -83,7 +83,7 @@ export default function Settings() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[9px] uppercase tracking-widest text-white/30 font-black ml-1 flex items-center gap-2">
+                  <label className="text-[9px] uppercase tracking-widest text-[var(--text-dim)] font-black ml-1 flex items-center gap-2">
                     <ImageIcon size={12} className="text-primary/40" /> URL do Brasão/Logo
                   </label>
                   <input 
@@ -96,7 +96,7 @@ export default function Settings() {
                 </div>
                 <div className="space-y-2 md:col-span-2">
                   <div className="flex justify-between items-center ml-1">
-                    <label className="text-[9px] uppercase tracking-widest text-white/30 font-black flex items-center gap-2">
+                    <label className="text-[9px] uppercase tracking-widest text-[var(--text-dim)] font-black flex items-center gap-2">
                       <FileText size={12} className="text-primary/40" /> E-mail do Mestre de Banquete (Para Relatórios)
                     </label>
                     <button 
@@ -127,11 +127,11 @@ export default function Settings() {
               </div>
             </div>
 
-            <div className="space-y-6 pt-6 border-t border-white/5">
+            <div className="space-y-6 pt-6 border-t border-[var(--border-main)]">
               <h3 className="text-[10px] uppercase tracking-[0.3em] font-black text-primary/60 border-b border-primary/10 pb-3">Segurança do Admin</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-2">
-                  <label className="text-[9px] uppercase tracking-widest text-white/30 font-black ml-1 flex items-center gap-2">
+                  <label className="text-[9px] uppercase tracking-widest text-[var(--text-dim)] font-black ml-1 flex items-center gap-2">
                     <Lock size={12} className="text-primary/40" /> Nova Senha do Administrador
                   </label>
                   <div className="relative">
@@ -145,17 +145,17 @@ export default function Settings() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-white/20 hover:text-primary transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-primary transition-colors"
                     >
                       {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                     </button>
                   </div>
-                  <p className="text-[8px] text-white/20 uppercase tracking-widest mt-1">Padrão: agape777</p>
+                  <p className="text-[8px] text-[var(--text-muted)] uppercase tracking-widest mt-1">Padrão: agape777</p>
                 </div>
               </div>
             </div>
 
-            <div className="pt-10 flex items-center justify-between border-t border-white/5">
+            <div className="pt-10 flex items-center justify-between border-t border-[var(--border-main)]">
                 {saved ? (
                   <span className="text-emerald-500 text-[10px] uppercase font-black tracking-widest flex items-center gap-2">
                     <Save size={14} /> Atualizado com sucesso
@@ -171,7 +171,7 @@ export default function Settings() {
         <div className="mt-16 p-8 rounded-2xl border border-rose-500/10 bg-rose-500/[0.02] flex flex-col md:flex-row items-center justify-between gap-6">
            <div>
              <h4 className="text-rose-500/60 font-black uppercase text-[10px] tracking-[0.2em] mb-1">Reinicialização de Dados</h4>
-             <p className="text-white/20 text-[10px] uppercase tracking-wider">Limpa permanentemente todos os registros deste navegador.</p>
+             <p className="text-[var(--text-muted)] text-[10px] uppercase tracking-wider">Limpa permanentemente todos os registros deste navegador.</p>
            </div>
            <button 
              onClick={() => {
