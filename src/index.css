@@ -2,21 +2,34 @@
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Inter:wght@100..900&display=swap');
 
 :root {
+  --bg-app: #121212;
+  --bg-sidebar: #181818;
+  --bg-card: #1e1e1e;
+  --text-main: #ffffff;
+  --text-dim: rgba(255, 255, 255, 0.6);
+  --text-muted: rgba(255, 255, 255, 0.3);
+  --border-main: rgba(255, 255, 255, 0.08);
+  --border-input: rgba(255, 255, 255, 0.12);
+  --input-bg: rgba(255, 255, 255, 0.05);
+  --scroll-thumb: rgba(255, 255, 255, 0.15);
+}
+
+.light {
   --bg-app: #ffffff;
   --bg-sidebar: #ffffff;
   --bg-card: #ffffff;
-  --text-main: #020617;
-  --text-dim: #334155;
-  --text-muted: #64748b;
+  --text-main: #0f172a;
+  --text-dim: #475569;
+  --text-muted: #94a3b8;
   --border-main: rgba(0, 0, 0, 0.06);
   --border-input: rgba(0, 0, 0, 0.08);
   --input-bg: #f8fafc;
-  --scroll-thumb: rgba(0, 0, 0, 0.08);
+  --scroll-thumb: rgba(0, 0, 0, 0.1);
 }
 
 @theme {
   --color-primary: #C5A059; /* Elegant Gold */
-  --color-secondary: #1a1a1a; 
+  --color-secondary: #000000; 
   --color-accent: #8B7344;
   --color-surface-dark: var(--bg-app);
   --color-surface-sidebar: var(--bg-sidebar);
@@ -45,11 +58,19 @@
 }
 
 .masonic-card {
-  @apply bg-surface-sidebar border border-slate-200 rounded-xl overflow-hidden shadow-sm transition-all hover:border-primary/20;
+  @apply bg-surface-sidebar border border-[var(--border-main)] rounded-xl overflow-hidden shadow-xl transition-all hover:border-primary/20;
+}
+
+.light .masonic-card {
+  @apply shadow-sm border-slate-200;
+}
+
+.light .input-masonic {
+  @apply border-slate-200 focus:border-primary/50;
 }
 
 .input-masonic {
-  @apply bg-[var(--input-bg)] border border-slate-200 text-[var(--text-main)] rounded px-4 py-2 focus:border-primary/50 outline-none transition-all placeholder:text-[var(--text-muted)] text-[10px] tracking-widest;
+  @apply bg-[var(--input-bg)] border border-[var(--border-input)] text-[var(--text-main)] rounded px-4 py-2 focus:border-primary/50 outline-none transition-all placeholder:text-[var(--text-muted)] text-[10px] tracking-widest;
 }
 
 .btn-primary {
