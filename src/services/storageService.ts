@@ -136,6 +136,13 @@ class LocalStorageService {
         name: 'Jantar de Ágape de Inverno',
         date: new Date().toISOString(),
         storeName: 'Augusta e Respeitável Loja Simbólica',
+        drinkPrices: [
+          { type: 'Cerveja 600ml', price: 15 },
+          { type: 'Cerveja Romarinho', price: 8 },
+          { type: 'Cerveja sem Álcool', price: 10 },
+          { type: 'Refrigerante', price: 6 },
+          { type: 'Água', price: 4 }
+        ]
     };
   }
 
@@ -310,6 +317,13 @@ class SupabaseService {
           name: 'Jantar de Ágape de Inverno',
           date: new Date().toISOString(),
           storeName: 'Augusta e Respeitável Loja Simbólica',
+          drinkPrices: [
+            { type: 'Cerveja 600ml', price: 15 },
+            { type: 'Cerveja Romarinho', price: 8 },
+            { type: 'Cerveja sem Álcool', price: 10 },
+            { type: 'Refrigerante', price: 6 },
+            { type: 'Água', price: 4 }
+          ]
       };
     }
     
@@ -320,7 +334,14 @@ class SupabaseService {
       storeName: data.store_name,
       logoUrl: data.logo_url,
       adminEmail: data.admin_email,
-      adminPassword: data.admin_password
+      adminPassword: data.admin_password,
+      drinkPrices: data.drink_prices || [
+        { type: 'Cerveja 600ml', price: 15 },
+        { type: 'Cerveja Romarinho', price: 8 },
+        { type: 'Cerveja sem Álcool', price: 10 },
+        { type: 'Refrigerante', price: 6 },
+        { type: 'Água', price: 4 }
+      ]
     };
   }
 
@@ -332,6 +353,7 @@ class SupabaseService {
     if (event.logoUrl !== undefined) dbUpdates.logo_url = event.logoUrl;
     if (event.adminEmail !== undefined) dbUpdates.admin_email = event.adminEmail;
     if (event.adminPassword !== undefined) dbUpdates.admin_password = event.adminPassword;
+    if (event.drinkPrices !== undefined) dbUpdates.drink_prices = event.drinkPrices;
 
     const { data, error } = await supabase
       .from('event_config')
@@ -349,7 +371,8 @@ class SupabaseService {
       storeName: data.store_name,
       logoUrl: data.logo_url,
       adminEmail: data.admin_email,
-      adminPassword: data.admin_password
+      adminPassword: data.admin_password,
+      drinkPrices: data.drink_prices
     };
   }
 }

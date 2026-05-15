@@ -78,26 +78,54 @@ export function generateAgapePDF(eventData: AgapeEvent, participants: Participan
     .filter(p => p.total > 0)
     .sort((a, b) => b.total - a.total);
 
-  const head = [['Pos', 'Participante', 'Vínculo', ...DRINKS, 'Total']];
-  const body = ranking.map((p, i) => [
-    i + 1, 
-    p.name, 
-    p.type, 
-    ...DRINKS.map(d => (p as any)[d]), 
-    p.total
-  ]);
+  const head = [['Pos', 'Participante', 'Presença', ...DRINKS, 'Total Un.', 'Total Devido']];
+  const body = [...participants]
+    .map(p => {
+      const pConsumption: Record<string, number> = {};
+      let totalCost = 0;
+      
+      DRINKS.forEach(d => {
+        const item = p.consumption.find(c => c.type === d);
+        const qty = item ? item.quantity : 0;
+        pConsumption[d] = qty;
+        
+        const priceObj = eventData.drinkPrices?.find(dp => dp.type === d);
+        if (priceObj) {
+          totalCost += qty * priceObj.price;
+        }
+      });
+      
+      return {
+        name: p.name,
+        type: p.type,
+        isPresent: p.isPresent ? 'Presente' : 'Ausente',
+        ...pConsumption,
+        totalUn: p.consumption.reduce((sum, c) => sum + c.quantity, 0),
+        totalVal: totalCost
+      };
+    })
+    .filter(p => p.isPresent === 'Presente' || p.totalUn > 0)
+    .sort((a, b) => b.totalUn - a.totalUn)
+    .map((p, i) => [
+      i + 1, 
+      p.name, 
+      p.isPresent,
+      ...DRINKS.map(d => (p as any)[d]), 
+      p.totalUn,
+      `R$ ${p.totalVal.toFixed(2)}`
+    ]);
 
   autoTable(doc, {
     startY: (doc as any).lastAutoTable.finalY + 20,
     head: head,
     body: body,
     theme: 'grid',
-    headStyles: { fillColor: [197, 160, 89], fontSize: 8 },
-    bodyStyles: { fontSize: 8 },
+    headStyles: { fillColor: [197, 160, 89], fontSize: 7 },
+    bodyStyles: { fontSize: 7 },
     columnStyles: {
-      0: { cellWidth: 10 },
+      0: { cellWidth: 8 },
       1: { cellWidth: 'auto' },
-      2: { cellWidth: 20 },
+      2: { cellWidth: 15 },
     }
   });
 

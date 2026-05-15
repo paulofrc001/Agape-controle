@@ -128,7 +128,31 @@ export default function Settings() {
             </div>
 
             <div className="space-y-6 pt-6 border-t border-[var(--border-main)]">
-              <h3 className="text-[10px] uppercase tracking-[0.3em] font-black text-primary/60 border-b border-primary/10 pb-3">Segurança do Admin</h3>
+              <h3 className="text-[10px] uppercase tracking-[0.3em] font-black text-primary/60 border-b border-primary/10 pb-3">Valores de Bebidas</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                {event.drinkPrices?.map((drink, idx) => (
+                  <div key={drink.type} className="space-y-2">
+                    <label className="text-[9px] uppercase tracking-widest text-[var(--text-dim)] font-black ml-1">
+                      {drink.type} (R$)
+                    </label>
+                    <input 
+                      type="number" 
+                      step="0.01"
+                      className="input-masonic w-full py-2"
+                      value={drink.price}
+                      onChange={(e) => {
+                        const newPrices = [...(event.drinkPrices || [])];
+                        newPrices[idx] = { ...newPrices[idx], price: parseFloat(e.target.value) || 0 };
+                        setEvent({ ...event, drinkPrices: newPrices });
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+              <p className="text-[8px] text-[var(--text-muted)] uppercase tracking-widest mt-2 italic">Valores utilizados para o cálculo automático no relatório final.</p>
+            </div>
+
+            <div className="space-y-6 pt-6 border-t border-[var(--border-main)]">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-2">
                   <label className="text-[9px] uppercase tracking-widest text-[var(--text-dim)] font-black ml-1 flex items-center gap-2">

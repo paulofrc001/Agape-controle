@@ -21,6 +21,11 @@ export interface Participant {
   createdAt: string;
 }
 
+export interface DrinkPrice {
+  type: DrinkConsumption['type'];
+  price: number;
+}
+
 export interface AgapeEvent {
   id: string;
   name: string;
@@ -29,4 +34,5 @@ export interface AgapeEvent {
   logoUrl?: string;
   adminEmail?: string;
   adminPassword?: string;
+  drinkPrices?: DrinkPrice[];
 }

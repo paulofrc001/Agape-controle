@@ -48,11 +48,20 @@ export default function Reports() {
   }, {} as Record<string, number>);
 
   const ranking = [...participants]
-    .map(p => ({
-      ...p,
-      totalDrinks: p.consumption.reduce((sum, c) => sum + c.quantity, 0)
-    }))
-    .filter(p => p.totalDrinks > 0)
+    .map(p => {
+      const totalDrinks = p.consumption.reduce((sum, c) => sum + c.quantity, 0);
+      const totalVal = p.consumption.reduce((sum, c) => {
+        const price = eventData?.drinkPrices?.find((dp: any) => dp.type === c.type)?.price || 0;
+        return sum + (c.quantity * price);
+      }, 0);
+      
+      return {
+        ...p,
+        totalDrinks,
+        totalVal
+      };
+    })
+    .filter(p => p.isPresent || p.totalDrinks > 0)
     .sort((a, b) => b.totalDrinks - a.totalDrinks);
 
   if (loading) return <div>Carregando...</div>;
@@ -101,11 +110,17 @@ export default function Reports() {
             ))}
           </div>
           
-          <div className="mt-12 pt-8 border-t border-[var(--border-main)]">
+          <div className="mt-12 pt-8 border-t border-[var(--border-main)] space-y-4">
             <div className="flex justify-between items-center bg-white/[0.02] p-6 rounded-xl border border-[var(--border-main)]">
                <span className="text-[var(--text-dim)] text-[10px] uppercase tracking-widest font-bold">Total de Itens</span>
                <span className="text-4xl font-serif text-primary">
                  {(Object.values(drinkTotals) as number[]).reduce((a, b) => a + b, 0)}
+               </span>
+            </div>
+            <div className="flex justify-between items-center bg-emerald-500/[0.02] p-6 rounded-xl border border-emerald-500/20">
+               <span className="text-emerald-500/60 text-[10px] uppercase tracking-widest font-bold">Arrecadação Total</span>
+               <span className="text-4xl font-serif text-emerald-500">
+                 R$ {ranking.reduce((sum, p) => sum + p.totalVal, 0).toFixed(2)}
                </span>
             </div>
           </div>
@@ -140,8 +155,13 @@ export default function Reports() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-xl font-serif text-primary">{p.totalDrinks}</p>
-                  <p className="text-[8px] text-[var(--text-dim)] uppercase font-black tracking-widest">Unidades</p>
+                  <p className="text-xl font-serif text-primary">R$ {p.totalVal.toFixed(2)}</p>
+                  <p className="text-[8px] text-[var(--text-dim)] uppercase font-black tracking-widest">{p.totalDrinks} Unidades</p>
+                  {p.isPresent ? (
+                    <span className="text-[7px] bg-emerald-500/10 text-emerald-600 px-1 rounded font-bold uppercase tracking-tighter">Presente</span>
+                  ) : (
+                    <span className="text-[7px] bg-rose-500/10 text-rose-600 px-1 rounded font-bold uppercase tracking-tighter">Ausente</span>
+                  )}
                 </div>
               </div>
             ))}
