@@ -1,6 +1,5 @@
 import express from "express";
 import path from "path";
-import { createServer as createViteServer } from "vite";
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 
@@ -14,20 +13,29 @@ export async function createServer() {
 
   // API Routes
   app.post("/api/send-report", async (req, res) => {
+    console.log("API: send-report request received");
     const { to, subject, html, attachments } = req.body;
 
     if (!to) {
       return res.status(400).json({ error: "Recipient email is required" });
     }
 
+    const smtpUser = process.env.SMTP_USER;
+    const smtpPass = (process.env.SMTP_PASS || "").replace(/\s/g, "");
+    
+    if (!smtpUser || !smtpPass) {
+      console.error("SMTP credentials missing");
+      return res.status(500).json({ error: "SMTP configuration missing on server" });
+    }
+
     const port = parseInt(process.env.SMTP_PORT || "587");
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST || "smtp.gmail.com",
       port: port,
-      secure: port === 465, // true for 465, false for other ports (587)
+      secure: port === 465,
       auth: {
-        user: process.env.SMTP_USER,
-        pass: (process.env.SMTP_PASS || "").replace(/\s/g, ""), // Remove spaces
+        user: smtpUser,
+        pass: smtpPass,
       },
       tls: {
         rejectUnauthorized: false
@@ -35,44 +43,64 @@ export async function createServer() {
     });
 
     try {
+      console.log(`Attempting to send email to ${to}...`);
       await transporter.sendMail({
-        from: `"Sistema de Ágape" <${process.env.SMTP_USER}>`,
+        from: `"Sistema de Ágape" <${smtpUser}>`,
         to,
         subject,
         html,
         attachments: attachments || [],
       });
 
+      console.log("Email sent successfully");
       res.json({ success: true, message: "Email sent successfully" });
     } catch (error: any) {
-      console.error("Email error:", error);
-      res.status(500).json({ error: "Failed to send email", details: error.message });
+      console.error("Email error detail:", error);
+      res.status(500).json({ 
+        error: "Failed to send email", 
+        details: error.message,
+        code: error.code
+      });
     }
   });
 
   // Vite middleware for development
-  if (process.env.NODE_ENV !== "production") {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: "spa",
-    });
-    app.use(vite.middlewares);
+  if (process.env.NODE_ENV !== "production" && !process.env.VERCEL) {
+    try {
+      const { createServer: createViteServer } = await import("vite");
+      const vite = await createViteServer({
+        server: { middlewareMode: true },
+        appType: "spa",
+      });
+      app.use(vite.middlewares);
+    } catch (e) {
+      console.warn("Vite not found or failed to load, skipping middleware");
+    }
   } else {
-    // In production (Vercel/Cloud Run), express.static serves the dist folder
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
     app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
+      // In Vercel, files might be in different places, but we try standard dist first
+      const indexPath = path.join(distPath, 'index.html');
+      res.sendFile(indexPath, (err) => {
+        if (err) {
+          // If dist/index.html not found, return 404 or a basic response
+          res.status(404).send("Application shell not found. Please build the app.");
+        }
+      });
     });
   }
 
   return { app, PORT };
 }
 
+// Start local server if not in Vercel
 if (process.env.NODE_ENV !== "production" || !process.env.VERCEL) {
   createServer().then(({ app, PORT }) => {
     app.listen(PORT, "0.0.0.0", () => {
       console.log(`Server running on http://localhost:${PORT}`);
     });
+  }).catch(err => {
+    console.error("Failed to start server:", err);
   });
 }
